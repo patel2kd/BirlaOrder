@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Birla Ordering System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    h1, h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      margin-top: 0px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 90%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .product-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .product-card {
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      width: calc(50% - 10px);
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    .product-card img {
+      max-width: 100px;
+      margin-bottom: 10px;
+    }
+
+    .product-card h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .product-card label, .product-card input[type="number"] {
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .product-card label {
+      width: 70px;
+    }
+
+    .product-card input[type="number"] {
+      width: calc(100% - 80px);
+    }
+
+    .buttons {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    .error {
+      color: red;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .success {
+      color: green;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .total-weight-display {
+      font-size: 18px;
+      text-align: center;
+      font-weight: bold;
+      margin-top: 20px;
+      color: #0271f8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="kadamsoapindustries.com">
+      <img src="wlogo1.JPG" alt="Your Logo" width="160px" height="80px" />
+    </a>
+    <h1>Welcome to Birla Detergent</h1>
+    <h2>Place Your Order Below</h2>
+    <div id="error" class="error"></div>
+    <div id="success" class="success"></div>
+    <div class="form-group">
+      <label for="company">Company Name:</label>
+      <input type="text" id="company" required>
+    </div>
+    <div class="form-group">
+      <label for="name">Your Name:</label>
+      <input type="text" id="name" required>
+    </div>
+    <div class="form-group">
+      <label for="area">Your Area:</label>
+      <input type="text" id="area" required>
+    </div>
+
+    <div class="product-grid" id="product-grid">
+      <!-- Products will be dynamically added here -->
+    </div>
+
+    <p class="total-weight-display" id="total-weight-display">Total Weight: 0 kg</p>
+
+    <div class="buttons">
+      <button onclick="submitOrder()">Submit Order</button>
+    </div>
+  </div>
+
+  <script type="text/javascript"
+        src="https://cdn.emailjs.com/dist/email.min.js?latest">
+</script>
+<script type="text/javascript">
+   (function(){
+      emailjs.init({
+        publicKey: "FRwFRqZef0aPiIMyL",
+      });
+   })();
+</script>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+  <script>
+
+    const products = [
+      { id: 1, name: "Birla Super Blue", description: "240G X 30NO", weight: 15, kg: 8, image: "Blue.jpg" },
+
+      { id: 2, name: "Birla Super Blue", description: "110G X 60NO", weight: 15, kg: 7.5, image: "Blue.jpg" },
+      
+      { id: 3, name: "Birla Jumbo Bar", description: "200G X 30NO", weight: 15, kg: 6.7, image: "Jumbo.jpg" },
+      
+      { id: 4, name: "Birla Jumbo Bar", description: "100G X 60NO", weight: 15, kg: 6.7, image: "Jumbo.jpg" },
+      
+      { id: 5, name: "Birla Ultra Bar", description: "190G X 30NO", weight: 1, kg: 6, image: "UltraWhite.jpg" },
+      
+      { id: 6, name: "Birla Shakti", description: "290G X 30NO", weight: 1, kg: 9, image: "BirlaShakti.jpg" },
+      
+      { id: 7, name: "Birla Shakti", description: "140G X 60NO", weight: 1, kg: 8.8, image: "BirlaShakti.jpg" },
+      
+      { id: 8, name: "Birla Bartan Bar", description: "200G X 30NO", weight: 1, kg: 6.45, image: "Bartan.jpg" },
+      
+      { id: 9, name: "Birla Advance 1.750Kg", description: "175G X 60NO", weight: 50, kg: 11.4, image: "AdvanceDetergent.jpg" },
+
+      { id: 10, name: "Spot-X Liquid (Cloth)", description: "50ML X 100NO", weight: 1, kg: 5.1, image: "Spotx.jpg" },
+
+      { id: 11, name: "Birla Forever 2.250Kg", description: "225G X 60NO", weight: 12, kg: 16, image: "Forever.jpg" },
+      
+      { id: 12, name: "Birla Tab Soap", description: "500G X 18NO", weight: 1, kg: 9.5, image: "PowerClean.jpg" },
+      
+      { id: 13, name: "Scrub-X Liquid (Dish)", description: "1LTR X 10NO", weight: 1, kg: 11, image: "Scrubx.jpg" },
+      
+      { id: 14, name: "Scrub-X Liquid (Dish)", description: "5LTR X 4NO", weight: 1, kg: 21, image: "Scrubx.jpg" },
+      
+      { id: 15, name: "Spot-X Liquid (Cloth)", description: "1LTR X 10NO", weight: 5, kg: 13, image: "Spotx.jpg" },
+      
+      { id: 16, name: "Spot-X Liquid (Cloth)", description: "5LTR X 3NO", weight:4, kg: 18, image: "Spotx.jpg" },
+
+      { id: 17, name: "Birla White 1.200Kg", description: "120G X 60NO", weight: 50, kg: 8, image: "WhiteDetergent.jpg" },
+      
+      { id: 18, name: "Birla Detergent Powder", description: "5KG X 5NO", weight: 25, kg: 26.5, image: "Powder.jpg" },
+      
+      { id: 19, name: "Birla Detergent Powder", description: "50G X 100NO", weight: 25, kg: 5.75, image: "Powder.jpg" },
+      
+      { id: 20, name: "Birla Detergent Powder", description: "125G X 50NO", weight: 25, kg: 6.75, image: "Powder.jpg" },
+      
+      { id: 21, name: "Birla Detergent Powder", description: "400G X 50NO", weight: 25, kg: 20.5, image: "Powder.jpg" },
+      
+      { id: 22, name: "Birla Detergent Powder", description: "1KG X 25NO", weight: 25, kg: 26.5, image: "Powder.jpg" },
+      
+      { id: 23, name: "Birla Detergent Powder", description: "2KG X 12NO", weight: 25, kg: 25.5, image: "Powder.jpg" },
+      
+      { id: 24, name: "Birla Detergent Powder", description: "3KG X 8NO", weight: 25, kg: 25.5, image: "Powder.jpg" },
+      
+      { id: 25, name: "Birla Fresh Cleaner", description: "500ML X 12NO", weight: 1, kg: 6.5, image: "TC.jpg" }
+    ];
+
+    const productGrid = document.getElementById("product-grid");
+
+products.forEach((product) => {
+  const card = document.createElement("div");
+  card.className = "product-card";
+  card.innerHTML = `
+    <img src="${product.image}" alt="${product.name}">
+    <h3>${product.name}</h3>
+    <p>${product.description}</p>
+    <p>Multiple of ${product.weight} only</p>
+    <p>${product.kg} Kg</p>
+    <label for="quantity-${product.id}">Quantity:</label>
+    <input type="number" id="quantity-${product.id}" min="0" placeholder="Enter quantity">
+    <div class="quantity-error" id="error-${product.id}" style="color: red; font-size: 12px;"></div>
+  `;
+  productGrid.appendChild(card);
+
+  // Add validation for quantity input
+  const input = document.getElementById(`quantity-${product.id}`);
+  const errorDiv = document.getElementById(`error-${product.id}`);
+  input.addEventListener("input", () => {
+    const quantity = parseInt(input.value || 0);
+
+    if (quantity % product.weight !== 0 && quantity > 0) {
+      errorDiv.textContent = `Quantity must be a multiple of ${product.weight}.`;
+    } else {
+      errorDiv.textContent = "";
+    }
+
+    // Update total weight whenever input changes
+    updateTotalWeight();
+  });
+});
+
+// Function to update total weight and validate inputs
+function updateTotalWeight() {
+  let totalWeight = 0;
+  let allValid = true;
+
+  products.forEach((product) => {
+    const quantity = parseInt(
+      document.getElementById(`quantity-${product.id}`).value || 0
+    );
+    const errorDiv = document.getElementById(`error-${product.id}`);
+    const weight = quantity * product.kg;
+
+    if (quantity > 0 && quantity % product.weight !== 0) {
+      allValid = false; // Mark as invalid if any product's quantity is not valid
+    }
+
+    totalWeight += weight;
+  });
+
+  document.getElementById(
+    "total-weight-display"
+  ).innerText = `Total Weight: ${totalWeight} kg`;
+
+  // Disable submit button if any input is invalid
+  const submitButton = document.querySelector(".buttons button");
+  submitButton.disabled = !allValid;
+}
+
+// Function to handle form submission
+function submitOrder() {
+  const company = document.getElementById("company").value;
+  const name = document.getElementById("name").value;
+  const area = document.getElementById("area").value;
+
+  if (!company || !name || !area) {
+    document.getElementById("error").innerText =
+      "Please fill in all required fields.";
+    return;
+  }
+
+  const orderDetails = [];
+  let totalWeight = 0;
+  let allValid = true;
+
+  products.forEach((product) => {
+    const quantity = parseInt(
+      document.getElementById(`quantity-${product.id}`).value || 0
+    );
+    const weight = quantity * product.kg;
+
+    if (quantity > 0 && quantity % product.weight !== 0) {
+      allValid = false; // Validate quantity during submission as well
+    }
+
+    if (quantity > 0) {
+      orderDetails.push({ ...product, quantity, weight });
+    }
+
+    totalWeight += weight;
+  });
+
+  if (!allValid) {
+    document.getElementById("error").innerText =
+      "Please correct invalid quantities.";
+    return;
+  }
+
+  if (totalWeight < 2000) {
+    document.getElementById("error").innerText =
+      "Total weight must be at least 2000kg.";
+    return;
+  }
+
+  document.getElementById("error").innerText = "";
+  document.getElementById("success").innerText =
+    "Order submitted successfully! View your order in pdf";
+
+  // Generate PDF
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const date = new Date().toLocaleDateString();
+
+  doc.addImage(
+    "https://kadamsoapindustries.com/images/wlogo1.JPG", 10, 10, 50, 20);
+  doc.text(`Order Receipt`, 10, 40);
+  doc.text(`Date: ${date}`, 10, 50);
+  doc.text(`Company Name: ${company}`, 10, 60);
+  doc.text(`Customer Name: ${name}`, 10, 70);
+  doc.text(`Area: ${area}`, 10, 80);
+
+  let y = 90;
+  orderDetails.forEach((item, index) => {
+    doc.text(
+      `${index + 1}. ${item.image} ${item.name} - Qty: ${item.quantity}, Weight: ${item.weight}kg`,
+      10,
+      y
+    );
+    y += 10;
+  });
+
+  doc.text(`Total Weight: ${totalWeight}kg`, 10, y + 10);
+  doc.save("order-receipt.pdf");
+
+  const emailData = {
+    company: company,
+    name: name,
+    area: area,
+    orderDetails: orderDetails.map((item) => `
+      ${item.name} - Qty: ${item.quantity}, Weight: ${item.weight}kg
+    `).join(''),
+    totalWeight: totalWeight
+  };
+
+  // Send email using EmailJS
+  emailjs.send("service_9kspesh", "template_cot3azh", emailData)
+    .then(function(response) {
+      console.log("Order sent successfully!", response);
+      document.getElementById("success").innerText =
+        "Order submitted successfully and sent to your email!";
+    }, function(error) {
+      console.log("Error sending order email:", error);
+      document.getElementById("error").innerText =
+        "There was an error sending the order email.";
+    });
+
+  // Refresh the page
+  setTimeout(() => {
+    location.reload();
+  }, 2000);
+}
+  </script>
+</body>
+</html>
