@@ -157,18 +157,6 @@
     </div>
   </div>
 
-  <script type="text/javascript"
-        src="https://cdn.emailjs.com/dist/email.min.js?latest">
-</script>
-<script type="text/javascript">
-   (function(){
-      emailjs.init({
-        publicKey: "59MDS7e-d-6d2ssKM",
-      });
-   })();
-</script>
-
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
   <script>
 
@@ -226,168 +214,149 @@
 
     const productGrid = document.getElementById("product-grid");
 
-products.forEach((product) => {
-  const card = document.createElement("div");
-  card.className = "product-card";
-  card.innerHTML = `
-    <img src="${product.image}" alt="${product.name}">
-    <h3>${product.name}</h3>
-    <p>${product.description}</p>
-    <p>Multiple of ${product.weight} only</p>
-    <p>${product.kg} Kg</p>
-    <label for="quantity-${product.id}">Quantity:</label>
-    <input type="number" id="quantity-${product.id}" min="0" placeholder="Enter quantity">
-    <div class="quantity-error" id="error-${product.id}" style="color: red; font-size: 12px;"></div>
-  `;
-  productGrid.appendChild(card);
+    products.forEach((product) => {
+      const card = document.createElement("div");
+      card.className = "product-card";
+      card.innerHTML = `
+        <img src="${product.image}" alt="${product.name}">
+        <h3>${product.name}</h3>
+        <p>${product.description}</p>
+        <p>Multiple of ${product.weight} only</p>
+        <p>${product.kg} Kg</p>
+        <label for="quantity-${product.id}">Quantity:</label>
+        <input type="number" id="quantity-${product.id}" min="0" placeholder="Enter quantity">
+        <div class="quantity-error" id="error-${product.id}" style="color: red; font-size: 12px;"></div>
+      `;
+      productGrid.appendChild(card);
 
-  // Add validation for quantity input
-  const input = document.getElementById(`quantity-${product.id}`);
-  const errorDiv = document.getElementById(`error-${product.id}`);
-  input.addEventListener("input", () => {
-    const quantity = parseInt(input.value || 0);
+      const input = document.getElementById(`quantity-${product.id}`);
+      const errorDiv = document.getElementById(`error-${product.id}`);
+      input.addEventListener("input", () => {
+        const quantity = parseInt(input.value || 0);
 
-    if (quantity % product.weight !== 0 && quantity > 0) {
-      errorDiv.textContent = `Quantity must be a multiple of ${product.weight}.`;
-    } else {
-      errorDiv.textContent = "";
-    }
+        if (quantity % product.weight !== 0 && quantity > 0) {
+          errorDiv.textContent = `Quantity must be a multiple of ${product.weight}.`;
+        } else {
+          errorDiv.textContent = "";
+        }
 
-    // Update total weight whenever input changes
-    updateTotalWeight();
-  });
-});
-
-// Function to update total weight and validate inputs
-function updateTotalWeight() {
-  let totalWeight = 0;
-  let allValid = true;
-
-  products.forEach((product) => {
-    const quantity = parseInt(
-      document.getElementById(`quantity-${product.id}`).value || 0
-    );
-    const errorDiv = document.getElementById(`error-${product.id}`);
-    const weight = quantity * product.kg;
-
-    if (quantity > 0 && quantity % product.weight !== 0) {
-      allValid = false; // Mark as invalid if any product's quantity is not valid
-    }
-
-    totalWeight += weight;
-  });
-
-  document.getElementById(
-    "total-weight-display"
-  ).innerText = `Total Weight: ${totalWeight} kg`;
-
-  // Disable submit button if any input is invalid
-  const submitButton = document.querySelector(".buttons button");
-  submitButton.disabled = !allValid;
-}
-
-// Function to handle form submission
-function submitOrder() {
-  const company = document.getElementById("company").value;
-  const name = document.getElementById("name").value;
-  const area = document.getElementById("area").value;
-
-  if (!company || !name || !area) {
-    document.getElementById("error").innerText =
-      "Please fill in all required fields.";
-    return;
-  }
-
-  const orderDetails = [];
-  let totalWeight = 0;
-  let allValid = true;
-
-  products.forEach((product) => {
-    const quantity = parseInt(
-      document.getElementById(`quantity-${product.id}`).value || 0
-    );
-    const weight = quantity * product.kg;
-
-    if (quantity > 0 && quantity % product.weight !== 0) {
-      allValid = false; // Validate quantity during submission as well
-    }
-
-    if (quantity > 0) {
-      orderDetails.push({ ...product, quantity, weight });
-    }
-
-    totalWeight += weight;
-  });
-
-  if (!allValid) {
-    document.getElementById("error").innerText =
-      "Please correct invalid quantities.";
-    return;
-  }
-
-  if (totalWeight < 2000) {
-    document.getElementById("error").innerText =
-      "Total weight must be at least 2000kg.";
-    return;
-  }
-
-  document.getElementById("error").innerText = "";
-  document.getElementById("success").innerText =
-    "Order submitted successfully! View your order in pdf";
-
-  // Generate PDF
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  const date = new Date().toLocaleDateString();
-
-  doc.addImage(
-    "https://kadamsoapindustries.com/images/wlogo1.JPG", 10, 10, 50, 20);
-  doc.text(`Order Receipt`, 10, 40);
-  doc.text(`Date: ${date}`, 10, 50);
-  doc.text(`Company Name: ${company}`, 10, 60);
-  doc.text(`Customer Name: ${name}`, 10, 70);
-  doc.text(`Area: ${area}`, 10, 80);
-
-  let y = 90;
-  orderDetails.forEach((item, index) => {
-    doc.text(
-      `${index + 1}. ${item.image} ${item.name} - Qty: ${item.quantity}, Weight: ${item.weight}kg`,
-      10,
-      y
-    );
-    y += 10;
-  });
-
-  doc.text(`Total Weight: ${totalWeight}kg`, 10, y + 10);
-  doc.save("order-receipt.pdf");
-
-  const emailData = {
-    company: company,
-    name: name,
-    area: area,
-    orderDetails: orderDetails.map((item) => `
-      ${item.name} - Qty: ${item.quantity}, Weight: ${item.weight}kg
-    `).join(''),
-    totalWeight: totalWeight
-  };
-
-  // Send email using EmailJS
-  emailjs.send("service_7vbhrfg", "template_cot3azh", emailData)
-    .then(function(response) {
-      console.log("Order sent successfully!", response);
-      document.getElementById("success").innerText =
-        "Order submitted successfully and sent to your email!";
-    }, function(error) {
-      console.log("Error sending order email:", error);
-      document.getElementById("error").innerText =
-        "There was an error sending the order email.";
+        updateTotalWeight();
+      });
     });
 
-  // Refresh the page
-  setTimeout(() => {
-    location.reload();
-  }, 2000);
-}
+    function updateTotalWeight() {
+      let totalWeight = 0;
+      let allValid = true;
+
+      products.forEach((product) => {
+        const quantity = parseInt(
+          document.getElementById(`quantity-${product.id}`).value || 0
+        );
+        const errorDiv = document.getElementById(`error-${product.id}`);
+        const weight = quantity * product.kg;
+
+        if (quantity > 0 && quantity % product.weight !== 0) {
+          allValid = false;
+        }
+
+        totalWeight += weight;
+      });
+
+      document.getElementById(
+        "total-weight-display"
+      ).innerText = `Total Weight: ${totalWeight} kg`;
+
+      const submitButton = document.querySelector(".buttons button");
+      submitButton.disabled = !allValid;
+    }
+
+    function submitOrder() {
+      const company = document.getElementById("company").value;
+      const name = document.getElementById("name").value;
+      const area = document.getElementById("area").value;
+
+      if (!company || !name || !area) {
+        document.getElementById("error").innerText =
+          "Please fill in all required fields.";
+        return;
+      }
+
+      const orderDetails = [];
+      let totalWeight = 0;
+      let allValid = true;
+
+      products.forEach((product) => {
+        const quantity = parseInt(
+          document.getElementById(`quantity-${product.id}`).value || 0
+        );
+        const weight = quantity * product.kg;
+
+        if (quantity > 0 && quantity % product.weight !== 0) {
+          allValid = false;
+        }
+
+        if (quantity > 0) {
+          orderDetails.push({ ...product, quantity, weight });
+        }
+
+        totalWeight += weight;
+      });
+
+      if (!allValid) {
+        document.getElementById("error").innerText =
+          "Please correct invalid quantities.";
+        return;
+      }
+
+      if (totalWeight < 2000) {
+        document.getElementById("error").innerText =
+          "Total weight must be at least 2000kg.";
+        return;
+      }
+
+      document.getElementById("error").innerText = "";
+
+      // Prepare the data to send to Formspree
+      const formData = new FormData();
+      formData.append("company", company);
+      formData.append("name", name);
+      formData.append("area", area);
+      formData.append(
+        "orderDetails",
+        orderDetails
+          .map(
+            (item) => `${item.name} - Qty: ${item.quantity}, Weight: ${item.weight}kg`
+          )
+          .join("\n")
+      );
+      formData.append("totalWeight", totalWeight);
+
+      fetch("https://formspree.io/f/mdkojpeb", {
+        method: "POST",
+        body: formData,
+        headers: {
+          Accept: "application/json",
+        },
+      })
+        .then((response) => {
+          if (response.ok) {
+            document.getElementById("success").innerText =
+              "Order submitted successfully!";
+          } else {
+            document.getElementById("error").innerText =
+              "There was an error submitting the order.";
+          }
+        })
+        .catch((error) => {
+          document.getElementById("error").innerText =
+            "There was an error submitting the order.";
+          console.error("Error:", error);
+        });
+
+      setTimeout(() => {
+        location.reload();
+      }, 2000);
+    }
   </script>
 </body>
 </html>
